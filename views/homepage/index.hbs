@@ -1,0 +1,155 @@
+<main role="main" class="container">
+  <div class="row">
+    <div class="col-12">
+      <h1>TODO List</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12">
+      <form class="form-inline" action="" method="">
+        <div class="input-group w-100">
+          <input type="text" name="description" id="taskDescription" placeholder="I have to..." class="form-control">
+          <div class="input-group-append">
+            <input type="button" value="Add" class="btn btn-primary" onclick="saveTask();">
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12" id="taskList">
+      {{#each tasks}}
+      <div class="card my-3 {{#eq status 'done' }}bg-light{{/eq}}">
+        <div class="card-body">
+          <p class="card-text">{{ description }}</p>
+          <a href="javascript:;" class="card-link" onclick="taskDelete({{id}});">Delete</a>
+          {{#eq status 'pending'}}
+            <form method="POST" action="/updateTaskStatus/{{id}}" id="mi-form">
+            <input type="hidden" value="{{id}}" id="taskId{{id}}" name="id">
+              <a href="javascript:;" class="card-link" onclick="taskDone({{id}});">Done</a>
+            </form>
+          {{/eq}}
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</main>
+
+<script>
+  function saveTask()
+  {
+    let description = document.getElementById('taskDescription').value;
+
+    let body = {
+      method:'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({description: description})
+    };
+
+    fetch('/tasks', body)
+      .then(response => {
+        if(response.ok){
+          return response.json();
+        } else {
+          throw "Error en la llamada Ajax"
+        }
+      })
+      .then(task => {
+        document.getElementById('taskDescription').value = '';
+        addTask(task);
+      })
+      .catch(error => {
+        console.log('Error: ', error)
+      })
+  }
+
+  function addTask(task) 
+  {
+    let html = 
+    `
+    <div class="card my-3">
+        <div class="card-body">
+          <p class="card-text">${ task.description }</p>
+          <a href="javascript:;" class="card-link" onclick="taskDelete(${task.id});">Delete</a>
+            <form method="POST" action="/updateTaskStatus/${task.id}" id="mi-form">
+            <input type="hidden" value="${task.id}" id="taskId${task.id}" name="id">
+              <a href="javascript:;" class="card-link" onclick="taskDone(${task.id});">Done</a>
+            </form>
+        </div>
+      </div>
+    `;
+
+    let node = document.createRange().createContextualFragment(html);
+    document.getElementById('taskList').prepend(node);
+  }
+
+  function taskDone(id) 
+  {
+    let task = id;
+
+    let body = {
+      method:'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({id: task})
+    };
+  
+    var url = "/updateTaskStatus/" + task;
+
+    fetch(url, body)
+      .then(response => {
+        if(response.ok){
+          return response.json();
+        } else {
+          throw "Error en la llamada Ajax"
+        }
+      }).then(task => {
+        console.log(task);
+      })
+      .catch(error => {
+        console.log('Error: ', error)
+      })
+      
+  }
+
+  function taskDelete(id)
+  {
+    let task = id;
+
+    let body = {
+      method:'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({id: task})
+    };
+  
+    var url = "/deleteTask/" + $.param({id: task});
+
+    fetch(url, body)
+      .then(response => {
+        if(response.ok){
+          return response.json();
+        } else {
+          throw "Error en la llamada Ajax"
+        }
+    })
+    .then(task => {
+        console.log(task);
+      })
+    .catch(error => {
+      console.log('Error: ', error)
+    })
+
+  }
+
+    
+  
+</script>
