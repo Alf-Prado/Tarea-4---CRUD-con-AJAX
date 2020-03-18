@@ -19,14 +19,14 @@
   <div class="row">
     <div class="col-lg-12" id="taskList">
       {{#each tasks}}
-      <div class="card my-3 {{#eq status 'done' }}bg-light{{/eq}}">
+      <div id="card{{id}}" class="card my-3 {{#eq status 'done' }}bg-light{{/eq}}">
         <div class="card-body">
           <p class="card-text">{{ description }}</p>
           <a href="javascript:;" class="card-link" onclick="taskDelete({{id}});">Delete</a>
           {{#eq status 'pending'}}
-            <form method="POST" action="/updateTaskStatus/{{id}}" id="mi-form">
+            <form method="POST" action="/updateTaskStatus/{{id}}" id="mi-form{{id}}">
             <input type="hidden" value="{{id}}" id="taskId{{id}}" name="id">
-              <a href="javascript:;" class="card-link" onclick="taskDone({{id}});">Done</a>
+              <a href="javascript:;" id="isDone{{id}}" class="card-link" onclick="taskDone({{id}});">Done</a>
             </form>
           {{/eq}}
         </div>
@@ -35,6 +35,10 @@
     </div>
   </div>
 </main>
+
+<style>
+  
+</style>
 
 <script>
   function saveTask()
@@ -71,11 +75,11 @@
   {
     let html = 
     `
-    <div class="card my-3">
+    <div class="card my-3" id="card${task.id}">
         <div class="card-body">
           <p class="card-text">${ task.description }</p>
           <a href="javascript:;" class="card-link" onclick="taskDelete(${task.id});">Delete</a>
-            <form method="POST" action="/updateTaskStatus/${task.id}" id="mi-form">
+            <form method="POST" action="/updateTaskStatus/${task.id}" id="mi-form${task.id}">
             <input type="hidden" value="${task.id}" id="taskId${task.id}" name="id">
               <a href="javascript:;" class="card-link" onclick="taskDone(${task.id});">Done</a>
             </form>
@@ -87,6 +91,7 @@
     document.getElementById('taskList').prepend(node);
   }
 
+//Función para indicar que una tarea está hecha
   function taskDone(id) 
   {
     let task = id;
@@ -110,7 +115,12 @@
           throw "Error en la llamada Ajax"
         }
       }).then(task => {
-        console.log(task);
+        //Cambios en el HTML dependiendo del ID
+        let card = "card" + task.id;
+        document.getElementById(card).classList.add("bg-light"); 
+
+        let form = "mi-form" + task.id;
+        document.getElementById(form).remove();
       })
       .catch(error => {
         console.log('Error: ', error)
@@ -118,6 +128,7 @@
       
   }
 
+//Función para borrar una tarea
   function taskDelete(id)
   {
     let task = id;
@@ -142,7 +153,9 @@
         }
     })
     .then(task => {
-        console.log(task);
+      //Se elimina el div de la tarea eliminada
+        let element = "card" + task.id;
+        document.getElementById(element).remove();
       })
     .catch(error => {
       console.log('Error: ', error)
